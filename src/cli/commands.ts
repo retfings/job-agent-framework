@@ -28,11 +28,11 @@ export function createCLI(): Command {
   }
 
   program
-    .name('code-agent')
-    .description('Code Agent CLI - 学习构建类似 Claude Code 的工具')
+    .name('yolo')
+    .description('YOLO - AI 驱动的代码助手')
     .version(version);
 
-  // chat 命令 - 交互式聊天
+  // 默认聊天命令（无子命令时直接进入聊天）
   program
     .command('chat')
     .description('进入交互式聊天模式')

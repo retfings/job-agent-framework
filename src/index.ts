@@ -1,11 +1,11 @@
 #!/usr/bin/env node
 
 /**
- * Code Agent CLI - 教学项目
+ * YOLO - AI 驱动的代码助手
  *
- * 一个教你如何用 TypeScript 构建类似 Claude Code 的工具的项目
+ * 直接进入聊天模式
  *
- * @author Code Agent Tutorial
+ * @author YOLO
  * @license MIT
  */
 
@@ -15,9 +15,10 @@ import { createCLI } from './cli/commands.js';
 async function main() {
   const cli = createCLI();
 
-  // 如果没有提供参数，显示帮助
+  // 如果没有提供参数，直接进入聊天模式
   if (process.argv.length <= 2) {
-    cli.help();
+    const { runChatMode } = await import('./cli/modes/chat.js');
+    await runChatMode({ model: 'claude-sonnet-4-20250514', dir: process.cwd() });
     return;
   }
 
