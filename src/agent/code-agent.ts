@@ -146,8 +146,6 @@ export class CodeAgent implements Agent {
 
     // 如果有工具调用，执行它们
     if (response.toolCalls.length > 0) {
-      const toolResults: LLMMessage[] = [];
-
       for (const toolCall of response.toolCalls) {
         this.state.toolCallCount++;
         this.emit('tool_call', { toolCall });
@@ -161,23 +159,46 @@ export class CodeAgent implements Agent {
 
           this.emit('tool_result', { toolCallId: toolCall.id, result });
 
-          // 将工具结果添加到消息历史
-          toolResults.push({
+          // 将工具调用（assistant）添加到消息历史
+          this.state.messages.push({
+            role: 'assistant',
+            content: [toolCall]
+          });
+
+          // 将工具结果（user）添加到消息历史
+          this.state.messages.push({
             role: 'user',
             content: [{
               id: toolCall.id,
               name: toolCall.name,
-              input: toolCall.input
-            } as ToolCall]
+              input: toolCall.input,
+              output: result.output || result.error,
+              success: result.success
+            } as unknown as ToolCall]
           });
-
-          // 注意：这里需要正确处理工具结果的格式
         } catch (error) {
           const errorMessage = error instanceof Error ? error.message : String(error);
           this.emit('tool_result', {
             toolCallId: toolCall.id,
             result: `错误：${errorMessage}`,
             isError: true
+          });
+
+          // 错误情况下也要添加消息到历史
+          this.state.messages.push({
+            role: 'assistant',
+            content: [toolCall]
+          });
+
+          this.state.messages.push({
+            role: 'user',
+            content: [{
+              id: toolCall.id,
+              name: toolCall.name,
+              input: toolCall.input,
+              output: `错误：${errorMessage}`,
+              success: false
+            } as unknown as ToolCall]
           });
         }
       }

@@ -107,25 +107,48 @@ export class AnthropicProvider implements LLMProvider {
    * 转换消息格式
    */
   private convertMessages(messages: LLMMessage[]): Anthropic.MessageParam[] {
-    return messages.map(msg => {
+    const result: Anthropic.MessageParam[] = [];
+
+    for (const msg of messages) {
       if (typeof msg.content === 'string') {
-        return {
+        // 普通文本消息
+        result.push({
           role: msg.role,
           content: msg.content
-        };
+        });
       } else {
-        // 处理工具调用响应
-        const toolResults: Anthropic.ToolResultBlockParam[] = msg.content.map((toolCall: ToolCall) => ({
-          type: 'tool_result',
-          tool_use_id: toolCall.id,
-          content: JSON.stringify(toolCall.input)
-        }));
-        return {
-          role: 'user',
-          content: toolResults
-        };
+        // 工具调用消息
+        const contentBlocks: (Anthropic.ToolUseBlockParam | Anthropic.ToolResultBlockParam)[] = [];
+
+        for (const item of msg.content) {
+          const tc = item as ToolCall & { output?: string; success?: boolean };
+
+          if (msg.role === 'assistant') {
+            // Assistant 的工具调用
+            contentBlocks.push({
+              type: 'tool_use',
+              id: tc.id,
+              name: tc.name,
+              input: tc.input
+            });
+          } else {
+            // User 的工具结果
+            contentBlocks.push({
+              type: 'tool_result',
+              tool_use_id: tc.id,
+              content: tc.output || JSON.stringify(tc.input)
+            });
+          }
+        }
+
+        result.push({
+          role: msg.role,
+          content: contentBlocks
+        });
       }
-    });
+    }
+
+    return result;
   }
 
   /**
