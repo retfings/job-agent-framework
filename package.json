@@ -1,6 +1,6 @@
 {
   "name": "@retfings/yolo",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "YOLO - AI 驱动的代码助手，直接进入聊天模式",
   "main": "dist/index.js",
   "type": "module",
