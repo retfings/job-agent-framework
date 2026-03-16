@@ -16,7 +16,10 @@
       "Bash(git push:*)",
       "Bash(ls:*)",
       "Bash(npm whoami:*)",
-      "Bash(npm login:*)"
+      "Bash(npm login:*)",
+      "Bash(npm publish:*)",
+      "Bash(echo:*)",
+      "Bash(npm version:*)"
     ]
   }
 }
