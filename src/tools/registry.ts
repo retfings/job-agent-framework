@@ -5,7 +5,7 @@
  * 负责工具的注册、查找和获取定义
  */
 
-import type { Tool, ToolRegistry as ToolRegistryInterface } from './types.js';
+import type { Tool, ToolRegistry as ToolRegistryInterface, ToolResult } from './types.js';
 import type { ToolDefinition } from '../llm/types.js';
 
 export class ToolRegistry implements ToolRegistryInterface {
@@ -50,7 +50,7 @@ export class ToolRegistry implements ToolRegistryInterface {
     name: string,
     params: Record<string, unknown>,
     context: { workingDirectory: string }
-  ): Promise<string> {
+  ): Promise<ToolResult> {
     const tool = this.get(name);
     if (!tool) {
       throw new Error(`未知的工具：${name}`);
@@ -65,7 +65,7 @@ export class ToolRegistry implements ToolRegistryInterface {
       console.log(`❌ 工具执行失败：${result.error}`);
     }
 
-    return result.success ? result.output : `错误：${result.error}`;
+    return result;
   }
 }
 

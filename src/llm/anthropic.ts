@@ -121,10 +121,12 @@ export class AnthropicProvider implements LLMProvider {
         const contentBlocks: (Anthropic.ToolUseBlockParam | Anthropic.ToolResultBlockParam)[] = [];
 
         for (const item of msg.content) {
-          const tc = item as ToolCall & { output?: string; success?: boolean };
+          // 检查是 tool_result 格式还是旧的 ToolCall 格式
+          const isToolResult = (item as any).type === 'tool_result';
 
           if (msg.role === 'assistant') {
             // Assistant 的工具调用
+            const tc = item as ToolCall;
             contentBlocks.push({
               type: 'tool_use',
               id: tc.id,
@@ -133,11 +135,23 @@ export class AnthropicProvider implements LLMProvider {
             });
           } else {
             // User 的工具结果
-            contentBlocks.push({
-              type: 'tool_result',
-              tool_use_id: tc.id,
-              content: tc.output || JSON.stringify(tc.input)
-            });
+            if (isToolResult) {
+              // 新的 tool_result 格式
+              const toolResult = item as any;
+              contentBlocks.push({
+                type: 'tool_result',
+                tool_use_id: toolResult.tool_use_id,
+                content: toolResult.content || ''
+              });
+            } else {
+              // 旧的 ToolCall 格式（兼容）
+              const tc = item as ToolCall & { output?: string; success?: boolean };
+              contentBlocks.push({
+                type: 'tool_result',
+                tool_use_id: tc.id,
+                content: tc.output || JSON.stringify(tc.input)
+              });
+            }
           }
         }
 

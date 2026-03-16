@@ -18,7 +18,7 @@ import type {
   AgentEventHandler
 } from './types.js';
 import type { LLMProvider, LLMMessage, ToolCall, LLMResponse } from '../llm/types.js';
-import type { ToolRegistry } from '../tools/types.js';
+import type { ToolRegistry, ToolResult } from '../tools/types.js';
 import { createAnthropicProvider } from '../llm/anthropic.js';
 import { ToolRegistry as DefaultToolRegistry } from '../tools/registry.js';
 
@@ -169,12 +169,11 @@ export class CodeAgent implements Agent {
           this.state.messages.push({
             role: 'user',
             content: [{
-              id: toolCall.id,
-              name: toolCall.name,
-              input: toolCall.input,
-              output: result.output || result.error,
-              success: result.success
-            } as unknown as ToolCall]
+              type: 'tool_result',
+              tool_use_id: toolCall.id,
+              content: result.output || result.error || '',
+              is_error: !result.success
+            }]
           });
         } catch (error) {
           const errorMessage = error instanceof Error ? error.message : String(error);
@@ -193,12 +192,11 @@ export class CodeAgent implements Agent {
           this.state.messages.push({
             role: 'user',
             content: [{
-              id: toolCall.id,
-              name: toolCall.name,
-              input: toolCall.input,
-              output: `错误：${errorMessage}`,
-              success: false
-            } as unknown as ToolCall]
+              type: 'tool_result',
+              tool_use_id: toolCall.id,
+              content: `错误：${errorMessage}`,
+              is_error: true
+            }]
           });
         }
       }
@@ -259,6 +257,6 @@ export class CodeAgent implements Agent {
 /**
  * 创建 Code Agent 实例
  */
-export function createAgent(config: AgentConfig): Agent {
-  return new CodeAgent(config);
+export function createAgent(config: AgentConfig, toolRegistry?: ToolRegistry): Agent {
+  return new CodeAgent(config, toolRegistry);
 }

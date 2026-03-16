@@ -58,37 +58,37 @@ export async function runTaskMode(task: string, options: RunOptions): Promise<vo
   toolRegistry.register(new BashTool());
   toolRegistry.register(new SearchFileTool());
 
-  // 创建 Agent
+  // 创建 Agent（传入工具注册表）
   const agent = createAgent({
     apiKey,
     model,
     baseURL,
     workingDirectory: options.dir
-  });
+  }, toolRegistry);
 
   // 设置事件处理
-  agent.on('thinking', ({ iteration }) => {
-    output.printThinking(iteration as number);
+  agent.on('thinking', ({ data }) => {
+    output.printThinking((data as { iteration: number }).iteration);
   });
 
-  agent.on('tool_call', ({ toolCall }) => {
-    const tc = toolCall as { name: string; input: Record<string, unknown> };
+  agent.on('tool_call', ({ data }) => {
+    const tc = (data as { toolCall: { name: string; input: Record<string, unknown> } }).toolCall;
     output.printToolCall(tc.name, tc.input);
   });
 
-  agent.on('tool_result', ({ result, isError }) => {
+  agent.on('tool_result', ({ data }) => {
     // 简化输出
   });
 
-  agent.on('response', ({ content }) => {
-    output.printResponse(content as string);
+  agent.on('response', ({ data }) => {
+    output.printResponse((data as { content: string }).content);
   });
 
-  agent.on('error', ({ error }) => {
-    output.printError(error as string);
+  agent.on('error', ({ data }) => {
+    output.printError((data as { error: string }).error);
   });
 
-  agent.on('complete', ({ finalResponse }) => {
+  agent.on('complete', ({ data }) => {
     output.printDivider();
     console.log(chalk.green('✅ 任务完成\n'));
   });

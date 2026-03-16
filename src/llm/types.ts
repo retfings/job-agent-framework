@@ -23,7 +23,12 @@ export interface ToolCall {
  */
 export interface LLMMessage {
   role: MessageRole;
-  content: string | ToolCall[];
+  content: string | (ToolCall | {
+    type: 'tool_result';
+    tool_use_id: string;
+    content: string;
+    is_error?: boolean;
+  })[];
 }
 
 /**
